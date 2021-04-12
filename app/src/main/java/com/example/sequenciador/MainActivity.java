@@ -9,8 +9,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Handler;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.leff.midi.MidiFile;
@@ -36,7 +39,8 @@ import static com.leff.midi.event.ProgramChange.MidiProgram.SYNTH_DRUM;
 import static com.leff.midi.event.ProgramChange.MidiProgram.TAIKO_DRUM;
 
 public class MainActivity extends AppCompatActivity {
-    private Button play, record;
+    private ImageButton record;
+    private Button play;
     private SeekBar seek_bar;
     private MediaRecorder myAudioRecorder;
     private String outputFile;
@@ -142,9 +146,23 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //get the spinner from the xml.
+        String[] spinner_items = new String[]{"1", "2", "three"};
+
+        Spinner dropdown0 = findViewById(R.id.spinner0);
+        Spinner dropdown1 = findViewById(R.id.spinner1);
+
+        ArrayAdapter<String> adapter0 = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, spinner_items);
+        ArrayAdapter<String> adapter1 = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, spinner_items);
+
+        dropdown0.setAdapter(adapter0);
+        dropdown1.setAdapter(adapter1);
+
+
         play = (Button) findViewById(R.id.play);
-        record = (Button) findViewById(R.id.record);
-        seek_bar = findViewById(R.id.seekBar);
+        record = (ImageButton) findViewById(R.id.record_0);
+        seek_bar = findViewById(R.id.seek_0);
         play.setEnabled(false);
 
         outputFile = getExternalCacheDir().getAbsolutePath();
