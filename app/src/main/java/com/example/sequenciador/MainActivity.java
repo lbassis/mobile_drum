@@ -43,47 +43,46 @@ public class MainActivity extends AppCompatActivity {
     private Handler handler;
 
     class ProgressThread extends Thread {
-        int position, sum, count;
+        int position, sum, count, last_value;
+        boolean going_up;
         String mode;
         ProgressThread(String mode) {
             this.position = 0;
             this.mode = mode;
             this.sum = 0;
             this.count = 0;
+            this.last_value = -1;
+            this.going_up = false;
         }
 
-        public void run() {
-            while (position < 50) {
-                seek_bar.setProgress(position);
-                position++;
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            if (mode == "recording") {
-                myAudioRecorder.stop();
-                myAudioRecorder.release();
-                myAudioRecorder = null;
-            }
-
-
-
+        public void create_midi() {
             MidiTrack noteTrack = new MidiTrack();
-            //noteTrack.insertEvent(inst);
             Amplituda amplituda = new Amplituda(getApplicationContext());
             amplituda.fromPath(outputFile)
                     .amplitudesAsList(list -> {
                         for(int tmp : list) {
                             count++;
                             if (tmp > 70) {
-                                noteTrack.insertNote(9, 33, 100, count*128, 128);
+                                if (going_up && tmp < last_value) {
+                                    going_up = false;
+                                    noteTrack.insertNote(9, 44, 100, (count - 1) * 128, 128);
+                                }
                             }
-                            //else {
-                            //    noteTrack.insertNote(0, 0, 100, count*128, 128);
-                            //}
+
+                            else {
+                                noteTrack.insertNote(0, 0, 100, (count-1)*128, 128);
+                            }
+
+                            if (tmp > last_value) {
+                                going_up = true;
+                            }
+                            else {
+                                going_up = false;
+                            }
+
+                            last_value = tmp;
+
+                            System.out.println(tmp);
                         }
 
                     });
@@ -99,6 +98,27 @@ public class MainActivity extends AppCompatActivity {
             catch(IOException e) {
                 System.err.println(e);
             }
+
+        }
+        public void run() {
+            while (position < 50) {
+                seek_bar.setProgress(position);
+                position++;
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if (mode == "recording") {
+                myAudioRecorder.stop();
+                myAudioRecorder.release();
+                myAudioRecorder = null;
+
+                create_midi();
+            }
+
 
 
             runOnUiThread(new Runnable() {
@@ -127,8 +147,6 @@ public class MainActivity extends AppCompatActivity {
         seek_bar = findViewById(R.id.seekBar);
         play.setEnabled(false);
 
-
-        //outputFile = Environment.getExternalStorageDirectory().getAbsolutePath() + "/recording.3gp";
         outputFile = getExternalCacheDir().getAbsolutePath();
         outputFile += "/audiorecordtest.3gp";
         System.out.println(outputFile);
@@ -148,13 +166,11 @@ public class MainActivity extends AppCompatActivity {
 
                 } catch (IllegalStateException ise) {
                     Toast.makeText(getApplicationContext(), "illegal state", Toast.LENGTH_LONG).show();
-                    // make something ...
                 } catch (IOException ioe) {
                     Toast.makeText(getApplicationContext(), "io exception", Toast.LENGTH_LONG).show();
-
-                    // make something
                 }
                 record.setEnabled(false);
+                play.setEnabled(false);
                 Toast.makeText(getApplicationContext(), "Recording started", Toast.LENGTH_LONG).show();
                 ProgressThread p = new ProgressThread("recording");
                 p.start();
@@ -166,6 +182,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 MediaPlayer mediaPlayer = new MediaPlayer();
                 try {
+                    record.setEnabled(false);
+                    play.setEnabled(false);
                     mediaPlayer.setDataSource(getExternalCacheDir().getAbsolutePath()+"/exported.mid");
                     mediaPlayer.prepare();
                     mediaPlayer.start();
@@ -173,7 +191,6 @@ public class MainActivity extends AppCompatActivity {
                     ProgressThread p = new ProgressThread("playing");
                     p.start();
                 } catch (Exception e) {
-                    // make something
                 }
             }
         });
