@@ -39,9 +39,9 @@ import static com.leff.midi.event.ProgramChange.MidiProgram.SYNTH_DRUM;
 import static com.leff.midi.event.ProgramChange.MidiProgram.TAIKO_DRUM;
 
 public class MainActivity extends AppCompatActivity {
-    private ImageButton record;
+    private ImageButton record0, record1;
     private Button play;
-    private SeekBar seek_bar;
+    private SeekBar seek_bar0, seek_bar1;
     private MediaRecorder myAudioRecorder;
     private String outputFile;
     private Handler handler;
@@ -50,13 +50,28 @@ public class MainActivity extends AppCompatActivity {
         int position, sum, count, last_value;
         boolean going_up;
         String mode;
-        ProgressThread(String mode) {
+        SeekBar seek_bar, seek_bar2;
+
+        ProgressThread(String mode, SeekBar seek_bar) {
             this.position = 0;
             this.mode = mode;
             this.sum = 0;
             this.count = 0;
             this.last_value = -1;
             this.going_up = false;
+            this.seek_bar = seek_bar;
+            this.seek_bar2 = null;
+        }
+
+        ProgressThread(String mode, SeekBar seek_bar, SeekBar seek_bar2) {
+            this.position = 0;
+            this.mode = mode;
+            this.sum = 0;
+            this.count = 0;
+            this.last_value = -1;
+            this.going_up = false;
+            this.seek_bar = seek_bar;
+            this.seek_bar2 = seek_bar2;
         }
 
         public void create_midi() {
@@ -107,6 +122,9 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             while (position < 50) {
                 seek_bar.setProgress(position);
+                if (seek_bar2 != null) {
+                    seek_bar2.setProgress(position);
+                }
                 position++;
                 try {
                     Thread.sleep(100);
@@ -124,18 +142,21 @@ public class MainActivity extends AppCompatActivity {
             }
 
 
-
             runOnUiThread(new Runnable() {
 
                 @Override
                 public void run() {
 
                     if (mode == "recording") {
-                        record.setEnabled(true);
+                        record0.setEnabled(true);
+                        record1.setEnabled(true);
                         play.setEnabled(true);
                         Toast.makeText(getApplicationContext(), "Audio recorded successfully", Toast.LENGTH_LONG).show();
                     }
                     else if (mode == "playing") {
+                        record0.setEnabled(true);
+                        record1.setEnabled(true);
+                        play.setEnabled(true);
                     }
                 }
             });
@@ -161,15 +182,18 @@ public class MainActivity extends AppCompatActivity {
 
 
         play = (Button) findViewById(R.id.play);
-        record = (ImageButton) findViewById(R.id.record_0);
-        seek_bar = findViewById(R.id.seek_0);
+        record0 = (ImageButton) findViewById(R.id.record_0);
+        seek_bar0 = findViewById(R.id.seek_0);
+        record1 = (ImageButton) findViewById(R.id.record_1);
+        seek_bar1 = findViewById(R.id.seek_1);
+
         play.setEnabled(false);
 
         outputFile = getExternalCacheDir().getAbsolutePath();
         outputFile += "/audiorecordtest.3gp";
         System.out.println(outputFile);
 
-        record.setOnClickListener(new View.OnClickListener() {
+        record0.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 myAudioRecorder = new MediaRecorder();
@@ -187,26 +211,56 @@ public class MainActivity extends AppCompatActivity {
                 } catch (IOException ioe) {
                     Toast.makeText(getApplicationContext(), "io exception", Toast.LENGTH_LONG).show();
                 }
-                record.setEnabled(false);
+                record0.setEnabled(false);
+                record1.setEnabled(false);
                 play.setEnabled(false);
                 Toast.makeText(getApplicationContext(), "Recording started", Toast.LENGTH_LONG).show();
-                ProgressThread p = new ProgressThread("recording");
+                ProgressThread p = new ProgressThread("recording", seek_bar0);
                 p.start();
             }
         });
+
+        record1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                myAudioRecorder = new MediaRecorder();
+                myAudioRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+                myAudioRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+                myAudioRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
+                myAudioRecorder.setOutputFile(outputFile);
+
+                try {
+                    myAudioRecorder.prepare();
+                    myAudioRecorder.start();
+
+                } catch (IllegalStateException ise) {
+                    Toast.makeText(getApplicationContext(), "illegal state", Toast.LENGTH_LONG).show();
+                } catch (IOException ioe) {
+                    Toast.makeText(getApplicationContext(), "io exception", Toast.LENGTH_LONG).show();
+                }
+                record0.setEnabled(false);
+                record1.setEnabled(false);
+                play.setEnabled(false);
+                Toast.makeText(getApplicationContext(), "Recording started", Toast.LENGTH_LONG).show();
+                ProgressThread p = new ProgressThread("recording", seek_bar1);
+                p.start();
+            }
+        });
+
 
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 MediaPlayer mediaPlayer = new MediaPlayer();
                 try {
-                    record.setEnabled(false);
+                    record0.setEnabled(false);
+                    record1.setEnabled(false);
                     play.setEnabled(false);
                     mediaPlayer.setDataSource(getExternalCacheDir().getAbsolutePath()+"/exported.mid");
                     mediaPlayer.prepare();
                     mediaPlayer.start();
                     Toast.makeText(getApplicationContext(), "Playing Audio", Toast.LENGTH_LONG).show();
-                    ProgressThread p = new ProgressThread("playing");
+                    ProgressThread p = new ProgressThread("playing", seek_bar0, seek_bar1);
                     p.start();
                 } catch (Exception e) {
                 }
