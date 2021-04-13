@@ -45,6 +45,9 @@ public class MainActivity extends AppCompatActivity {
     private MediaRecorder myAudioRecorder;
     private String outputFile;
     private Handler handler;
+    MidiTrack noteTrack;
+    MediaPlayer mediaPlayer;
+
 
     class ProgressThread extends Thread {
         int position, sum, count, last_value;
@@ -75,21 +78,22 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public void create_midi() {
-            MidiTrack noteTrack = new MidiTrack();
             Amplituda amplituda = new Amplituda(getApplicationContext());
             amplituda.fromPath(outputFile)
                     .amplitudesAsList(list -> {
                         for(int tmp : list) {
                             count++;
-                            if (tmp > 70) {
-                                if (going_up && tmp < last_value) {
+                            if (tmp > 13) {
+                                //System.out.println(tmp + " " + last_value);
+                                //if (tmp < last_value) {
                                     going_up = false;
+                                    System.out.println("som no momento" + count);
                                     noteTrack.insertNote(9, 44, 100, (count - 1) * 128, 128);
-                                }
+                                //}
                             }
 
                             else {
-                                noteTrack.insertNote(0, 0, 100, (count-1)*128, 128);
+                                noteTrack.insertNote(9, 0, 100, (count-1)*128, 128);
                             }
 
                             if (tmp > last_value) {
@@ -106,20 +110,33 @@ public class MainActivity extends AppCompatActivity {
 
                     });
 
-            ArrayList<MidiTrack> tracks = new ArrayList<MidiTrack>();
-            tracks.add(noteTrack);
-            MidiFile midi = new MidiFile(MidiFile.DEFAULT_RESOLUTION, tracks);
-
-            File output = new File(getExternalCacheDir().getAbsolutePath()+"/exported.mid");
-            try {
-                midi.writeToFile(output);
-            }
-            catch(IOException e) {
-                System.err.println(e);
-            }
-
         }
         public void run() {
+
+            if (mode == "playing") {
+                while (true) {
+                    position = 0;
+                    mediaPlayer.start();
+                    while (position < 50) {
+                        seek_bar.setProgress(position);
+                        if (seek_bar2 != null) {
+                            seek_bar2.setProgress(position);
+                        }
+                        position++;
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    mediaPlayer.stop();
+                    try {
+                        mediaPlayer.prepare();
+                    }
+                    catch (IOException e){}
+                        //mediaPlayer.prepare();
+                }
+            }
             while (position < 50) {
                 seek_bar.setProgress(position);
                 if (seek_bar2 != null) {
@@ -138,9 +155,9 @@ public class MainActivity extends AppCompatActivity {
                 myAudioRecorder.release();
                 myAudioRecorder = null;
 
-                create_midi();
             }
 
+            create_midi();
 
             runOnUiThread(new Runnable() {
 
@@ -169,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //get the spinner from the xml.
-        String[] spinner_items = new String[]{"1", "2", "three"};
+        String[] spinner_items = new String[]{"Pedal Hi-hat"};
 
         Spinner dropdown0 = findViewById(R.id.spinner0);
         Spinner dropdown1 = findViewById(R.id.spinner1);
@@ -179,6 +196,8 @@ public class MainActivity extends AppCompatActivity {
 
         dropdown0.setAdapter(adapter0);
         dropdown1.setAdapter(adapter1);
+
+        noteTrack = new MidiTrack();
 
 
         play = (Button) findViewById(R.id.play);
@@ -251,14 +270,29 @@ public class MainActivity extends AppCompatActivity {
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MediaPlayer mediaPlayer = new MediaPlayer();
+                mediaPlayer = new MediaPlayer();
                 try {
                     record0.setEnabled(false);
                     record1.setEnabled(false);
                     play.setEnabled(false);
+
+                    ArrayList<MidiTrack> tracks = new ArrayList<MidiTrack>();
+
+                    tracks.add(noteTrack);
+                    MidiFile midi = new MidiFile(MidiFile.DEFAULT_RESOLUTION, tracks);
+
+                    File output = new File(getExternalCacheDir().getAbsolutePath()+"/exported.mid");
+                    try {
+                        midi.writeToFile(output);
+                    }
+                    catch(IOException e) {
+                        System.err.println(e);
+                    }
+
+
                     mediaPlayer.setDataSource(getExternalCacheDir().getAbsolutePath()+"/exported.mid");
                     mediaPlayer.prepare();
-                    mediaPlayer.start();
+                    //mediaPlayer.start();
                     Toast.makeText(getApplicationContext(), "Playing Audio", Toast.LENGTH_LONG).show();
                     ProgressThread p = new ProgressThread("playing", seek_bar0, seek_bar1);
                     p.start();
