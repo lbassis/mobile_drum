@@ -64,13 +64,15 @@
         android:max="50"
         android:progress="0" />
 
-    <Button
+    <ImageButton
         android:id="@+id/play"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="65dp"
+        android:layout_height="65dp"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="600dp"
-        android:text="Play"
+        android:scaleType="fitXY"
+        android:backgroundTint="@color/white"
+        android:src="@drawable/play_button_disabled"
         android:textSize="20sp" />
 
 </RelativeLayout>

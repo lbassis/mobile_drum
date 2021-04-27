@@ -40,12 +40,15 @@ import static com.leff.midi.event.ProgramChange.MidiProgram.TAIKO_DRUM;
 
 public class MainActivity extends AppCompatActivity {
     private ImageButton record0, record1;
-    private Button play;
+    private ImageButton play;
     private SeekBar seek_bar0, seek_bar1;
     private MediaRecorder myAudioRecorder;
-    private String outputFile;
+    private String track1_file, track2_file;
     private Handler handler;
-    MidiTrack noteTrack;
+    private Boolean playing = false;
+
+    volatile boolean running_thread = false;
+    MidiTrack noteTrack0, noteTrack1;
     MediaPlayer mediaPlayer;
 
 
@@ -79,45 +82,41 @@ public class MainActivity extends AppCompatActivity {
 
         public void create_midi() {
             Amplituda amplituda = new Amplituda(getApplicationContext());
-            amplituda.fromPath(outputFile)
+            amplituda.fromPath(track1_file)
                     .amplitudesAsList(list -> {
                         for(int tmp : list) {
                             count++;
                             if (tmp > 13) {
-                                //System.out.println(tmp + " " + last_value);
-                                //if (tmp < last_value) {
-                                    going_up = false;
                                     System.out.println("som no momento" + count);
-                                    noteTrack.insertNote(9, 44, 100, (count - 1) * 128, 128);
-                                //}
-                            }
-
-                            else {
-                                noteTrack.insertNote(9, 0, 100, (count-1)*128, 128);
-                            }
-
-                            if (tmp > last_value) {
-                                going_up = true;
+                                    noteTrack0.insertNote(9, 44, 100, (count - 1) * 128, 128);
                             }
                             else {
-                                going_up = false;
+                                noteTrack0.insertNote(9, 0, 100, (count-1)*128, 128);
                             }
-
-                            last_value = tmp;
-
-                            System.out.println(tmp);
                         }
-
                     });
-
+            amplituda.fromPath(track2_file)
+                    .amplitudesAsList(list -> {
+                        for(int tmp : list) {
+                            count++;
+                            if (tmp > 13) {
+                                System.out.println("som no momento" + count);
+                                noteTrack1.insertNote(7, 44, 100, (count - 1) * 128, 128);
+                            }
+                            else {
+                                noteTrack1.insertNote(9, 0, 100, (count-1)*128, 128);
+                            }
+                        }
+                    });
         }
+
         public void run() {
 
             if (mode == "playing") {
-                while (true) {
+                while (running_thread) {
                     position = 0;
                     mediaPlayer.start();
-                    while (position < 50) {
+                    while (position < 50 && running_thread) {
                         seek_bar.setProgress(position);
                         if (seek_bar2 != null) {
                             seek_bar2.setProgress(position);
@@ -136,6 +135,19 @@ public class MainActivity extends AppCompatActivity {
                     catch (IOException e){}
                         //mediaPlayer.prepare();
                 }
+                try {
+                    playing = false;
+                    mediaPlayer.stop();
+                    mediaPlayer.prepare();
+                }
+                catch (IOException e){}
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        record0.setEnabled(true);
+                        record1.setEnabled(true);
+                    }});
+                        return;
             }
             while (position < 50) {
                 seek_bar.setProgress(position);
@@ -154,7 +166,6 @@ public class MainActivity extends AppCompatActivity {
                 myAudioRecorder.stop();
                 myAudioRecorder.release();
                 myAudioRecorder = null;
-
             }
 
             create_midi();
@@ -168,12 +179,14 @@ public class MainActivity extends AppCompatActivity {
                         record0.setEnabled(true);
                         record1.setEnabled(true);
                         play.setEnabled(true);
+                        play.setImageResource(R.drawable.play_button);
                         Toast.makeText(getApplicationContext(), "Audio recorded successfully", Toast.LENGTH_LONG).show();
                     }
                     else if (mode == "playing") {
                         record0.setEnabled(true);
                         record1.setEnabled(true);
                         play.setEnabled(true);
+                        play.setImageResource(R.drawable.play_button);
                     }
                 }
             });
@@ -197,10 +210,10 @@ public class MainActivity extends AppCompatActivity {
         dropdown0.setAdapter(adapter0);
         dropdown1.setAdapter(adapter1);
 
-        noteTrack = new MidiTrack();
+        noteTrack0 = new MidiTrack();
+        noteTrack1 = new MidiTrack();
 
-
-        play = (Button) findViewById(R.id.play);
+        play = (ImageButton) findViewById(R.id.play);
         record0 = (ImageButton) findViewById(R.id.record_0);
         seek_bar0 = findViewById(R.id.seek_0);
         record1 = (ImageButton) findViewById(R.id.record_1);
@@ -208,9 +221,10 @@ public class MainActivity extends AppCompatActivity {
 
         play.setEnabled(false);
 
-        outputFile = getExternalCacheDir().getAbsolutePath();
-        outputFile += "/audiorecordtest.3gp";
-        System.out.println(outputFile);
+        track1_file = getExternalCacheDir().getAbsolutePath();
+        track1_file += "/track1.3gp";
+        track2_file = getExternalCacheDir().getAbsolutePath();
+        track2_file += "/track2.3gp";
 
         record0.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -219,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
                 myAudioRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
                 myAudioRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
                 myAudioRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
-                myAudioRecorder.setOutputFile(outputFile);
+                myAudioRecorder.setOutputFile(track1_file);
 
                 try {
                     myAudioRecorder.prepare();
@@ -246,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
                 myAudioRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
                 myAudioRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
                 myAudioRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
-                myAudioRecorder.setOutputFile(outputFile);
+                myAudioRecorder.setOutputFile(track2_file);
 
                 try {
                     myAudioRecorder.prepare();
@@ -266,37 +280,48 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mediaPlayer = new MediaPlayer();
-                try {
-                    record0.setEnabled(false);
-                    record1.setEnabled(false);
-                    play.setEnabled(false);
-
-                    ArrayList<MidiTrack> tracks = new ArrayList<MidiTrack>();
-
-                    tracks.add(noteTrack);
-                    MidiFile midi = new MidiFile(MidiFile.DEFAULT_RESOLUTION, tracks);
-
-                    File output = new File(getExternalCacheDir().getAbsolutePath()+"/exported.mid");
+                if (!playing) {
+                    playing = true;
+                    mediaPlayer = new MediaPlayer();
                     try {
-                        midi.writeToFile(output);
-                    }
-                    catch(IOException e) {
-                        System.err.println(e);
-                    }
+                        record0.setEnabled(false);
+                        record1.setEnabled(false);
+                        play.setImageResource(R.drawable.stop_button);
+                        ArrayList<MidiTrack> tracks = new ArrayList<MidiTrack>();
+
+                        tracks.add(noteTrack0);
+                        tracks.add(noteTrack1);
+
+                        MidiFile midi = new MidiFile(MidiFile.DEFAULT_RESOLUTION, tracks);
+
+                        File output = new File(getExternalCacheDir().getAbsolutePath() + "/exported.mid");
+                        try {
+                            midi.writeToFile(output);
+                        } catch (IOException e) {
+                            System.err.println(e);
+                        }
 
 
-                    mediaPlayer.setDataSource(getExternalCacheDir().getAbsolutePath()+"/exported.mid");
-                    mediaPlayer.prepare();
-                    //mediaPlayer.start();
-                    Toast.makeText(getApplicationContext(), "Playing Audio", Toast.LENGTH_LONG).show();
-                    ProgressThread p = new ProgressThread("playing", seek_bar0, seek_bar1);
-                    p.start();
-                } catch (Exception e) {
+                        mediaPlayer.setDataSource(getExternalCacheDir().getAbsolutePath() + "/exported.mid");
+                        mediaPlayer.prepare();
+                        //mediaPlayer.start();
+                        Toast.makeText(getApplicationContext(), "Playing Audio", Toast.LENGTH_LONG).show();
+                        ProgressThread p = new ProgressThread("playing", seek_bar0, seek_bar1);
+                        running_thread = true;
+                        p.start();
+                    } catch (Exception e) {
+                    }
+                }
+                else {
+                    running_thread = false;
+                    play.setImageResource(R.drawable.play_button);
+                    seek_bar0.setProgress(0);
+                    seek_bar1.setProgress(0);
+                    playing = false;
+
                 }
             }
         });
