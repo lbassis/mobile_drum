@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Handler;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -46,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
     private String track1_file, track2_file;
     private Handler handler;
     private Boolean playing = false;
+    private int pitch1 = 38;
+    private int pitch2 = 113;
 
     volatile boolean running_thread = false;
     MidiTrack noteTrack0, noteTrack1;
@@ -82,32 +85,41 @@ public class MainActivity extends AppCompatActivity {
 
         public void create_midi() {
             Amplituda amplituda = new Amplituda(getApplicationContext());
-            amplituda.fromPath(track1_file)
-                    .amplitudesAsList(list -> {
-                        for(int tmp : list) {
-                            count++;
-                            if (tmp > 13) {
+            File file = new File(track1_file);
+            if(file.exists()) {
+                count = 0;
+                amplituda.fromPath(track1_file)
+                        .amplitudesAsList(list -> {
+                            for (int tmp : list) {
+                                count++;
+                                if (tmp > 13) {
                                     System.out.println("som no momento" + count);
-                                    noteTrack0.insertNote(9, 44, 100, (count - 1) * 128, 128);
+                                    noteTrack0.insertNote(9, pitch1, 100, (count - 1) * 128, 128);
+                                }
+//                            else {
+//                                noteTrack0.insertNote(9, 0, 100, (count-1)*128, 128);
+//                            }
                             }
-                            else {
-                                noteTrack0.insertNote(9, 0, 100, (count-1)*128, 128);
+                        });
+            }
+            file = new File(track2_file);
+            if(file.exists()) {
+                count = 0;
+                amplituda.fromPath(track2_file)
+                        .amplitudesAsList(list -> {
+                            for (int tmp : list) {
+                                count++;
+                                if (tmp > 13) {
+
+                                    System.out.println("som no momento" + count + " com pitch " + pitch2);
+                                    noteTrack1.insertNote(9, pitch2, 100, (count - 1) * 128, 128);
+                                }
+                                //                            else {
+                                //                                noteTrack1.insertNote(9, 0, 100, (count-1)*128, 128);
+                                //                            }
                             }
-                        }
-                    });
-            amplituda.fromPath(track2_file)
-                    .amplitudesAsList(list -> {
-                        for(int tmp : list) {
-                            count++;
-                            if (tmp > 13) {
-                                System.out.println("som no momento" + count);
-                                noteTrack1.insertNote(7, 44, 100, (count - 1) * 128, 128);
-                            }
-                            else {
-                                noteTrack1.insertNote(9, 0, 100, (count-1)*128, 128);
-                            }
-                        }
-                    });
+                        });
+            }
         }
 
         public void run() {
@@ -180,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
                         record1.setEnabled(true);
                         play.setEnabled(true);
                         play.setImageResource(R.drawable.play_button);
-                        Toast.makeText(getApplicationContext(), "Audio recorded successfully", Toast.LENGTH_LONG).show();
+                        //Toast.makeText(getApplicationContext(), "Audio recorded successfully", Toast.LENGTH_LONG).show();
                     }
                     else if (mode == "playing") {
                         record0.setEnabled(true);
@@ -198,17 +210,47 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        File fdelete = new File(getExternalCacheDir().getAbsolutePath()+"/track1.3gp");
+        if (fdelete.exists()) {
+            fdelete.delete();
+        }
+        fdelete = new File(getExternalCacheDir().getAbsolutePath()+"/track2.3gp");
+        if (fdelete.exists()) {
+            fdelete.delete();
+        }
+
         //get the spinner from the xml.
-        String[] spinner_items = new String[]{"Pedal Hi-hat"};
+        //38 -  42
+        String[] spinner_items0 = new String[]{"Acoustic Snare", "Hand Clap", "Electric Snare", "Low Floor Tom", "Closed Hi-hat"};
+        //String[] spinner_items1 = new String[]{"Tinkle Bell", "Agogo", "Steel Drums", "Woodblock", "Taiko Drum", "Melodic Tom", "Synth Drum"};
 
         Spinner dropdown0 = findViewById(R.id.spinner0);
         Spinner dropdown1 = findViewById(R.id.spinner1);
 
-        ArrayAdapter<String> adapter0 = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, spinner_items);
-        ArrayAdapter<String> adapter1 = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, spinner_items);
+        ArrayAdapter<String> adapter0 = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, spinner_items0);
+        ArrayAdapter<String> adapter1 = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, spinner_items0);
 
         dropdown0.setAdapter(adapter0);
         dropdown1.setAdapter(adapter1);
+
+        dropdown0.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                pitch1 = position+38;// your code here
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+            }
+        });
+        dropdown1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                pitch2 = position+38;
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+            }
+        });
 
         noteTrack0 = new MidiTrack();
         noteTrack1 = new MidiTrack();
@@ -240,14 +282,14 @@ public class MainActivity extends AppCompatActivity {
                     myAudioRecorder.start();
 
                 } catch (IllegalStateException ise) {
-                    Toast.makeText(getApplicationContext(), "illegal state", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(getApplicationContext(), "illegal state", Toast.LENGTH_LONG).show();
                 } catch (IOException ioe) {
-                    Toast.makeText(getApplicationContext(), "io exception", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(getApplicationContext(), "io exception", Toast.LENGTH_LONG).show();
                 }
                 record0.setEnabled(false);
                 record1.setEnabled(false);
                 play.setEnabled(false);
-                Toast.makeText(getApplicationContext(), "Recording started", Toast.LENGTH_LONG).show();
+                //Toast.makeText(getApplicationContext(), "Recording started", Toast.LENGTH_LONG).show();
                 ProgressThread p = new ProgressThread("recording", seek_bar0);
                 p.start();
             }
@@ -267,14 +309,14 @@ public class MainActivity extends AppCompatActivity {
                     myAudioRecorder.start();
 
                 } catch (IllegalStateException ise) {
-                    Toast.makeText(getApplicationContext(), "illegal state", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(getApplicationContext(), "illegal state", Toast.LENGTH_LONG).show();
                 } catch (IOException ioe) {
-                    Toast.makeText(getApplicationContext(), "io exception", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(getApplicationContext(), "io exception", Toast.LENGTH_LONG).show();
                 }
                 record0.setEnabled(false);
                 record1.setEnabled(false);
                 play.setEnabled(false);
-                Toast.makeText(getApplicationContext(), "Recording started", Toast.LENGTH_LONG).show();
+                //Toast.makeText(getApplicationContext(), "Recording started", Toast.LENGTH_LONG).show();
                 ProgressThread p = new ProgressThread("recording", seek_bar1);
                 p.start();
             }
@@ -308,7 +350,7 @@ public class MainActivity extends AppCompatActivity {
                         mediaPlayer.setDataSource(getExternalCacheDir().getAbsolutePath() + "/exported.mid");
                         mediaPlayer.prepare();
                         //mediaPlayer.start();
-                        Toast.makeText(getApplicationContext(), "Playing Audio", Toast.LENGTH_LONG).show();
+                        //Toast.makeText(getApplicationContext(), "Playing Audio", Toast.LENGTH_LONG).show();
                         ProgressThread p = new ProgressThread("playing", seek_bar0, seek_bar1);
                         running_thread = true;
                         p.start();

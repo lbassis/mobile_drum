@@ -74,5 +74,15 @@
         android:backgroundTint="@color/white"
         android:src="@drawable/play_button_disabled"
         android:textSize="20sp" />
+    <ImageButton
+        android:id="@+id/add"
+        android:layout_width="65dp"
+        android:layout_height="65dp"
+        android:layout_below="@id/seek_1"
+        android:layout_marginLeft="320dp"
+        android:scaleType="fitXY"
+        android:backgroundTint="@color/white"
+        android:src="@drawable/add_button"
+        android:textSize="20sp" />
 
 </RelativeLayout>
