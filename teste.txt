@@ -1,0 +1,35 @@
+pré:
+- voce costuma utilizar softwares para ediçao ou síntese sonora?
+- voce já utilizou um sequenciador antes?
+
+- mede tempo até fazer uma batida
+
+pós:
+- qual interface você considerou mais intuitiva?
+- qual interface permite maior controle na elaboraçao de uma sequencia?
+- qual interface permite maior precisão na elaboraçao de uma sequencia?
+- voce considera possível compor uma batida usando a aplicaçao desenvolvida?
+
+joao:   sim,sim,2:24 app,1:10 web,web,web,web,sim,87.5
+leo:    nao,nao,1:39 app, 1:55 web,web,web,web,sim,70
+flores: nao,nao,1:40 web,0:50 app,app,app,web,sim,95
+renan:  sim,nao,1:30 app,2:31 web,app,web,web,sim,
+jonas:  nao,nao,4:09 web,5:46 app,web,web,web,nao
+
+Eu acho que gostaria de usar esse sistema com frequência.
+Eu acho o sistema desnecessariamente complexo.
+Eu achei o sistema fácil de usar.
+Eu acho que precisaria de ajuda de uma pessoa com conhecimentos técnicos para usar o sistema.
+Eu acho que as várias funções do sistema estão muito bem integradas.
+Eu acho que o sistema apresenta muita inconsistência.
+Eu imagino que as pessoas aprenderão como usar esse sistema rapidamente.
+Eu achei o sistema atrapalhado de usar.
+Eu me senti confiante ao usar o sistema.
+Eu precisei aprender várias coisas novas antes de conseguir usar o sistema.
+
+sus:
+joao:   3,1,4,1,4,1,5,1,4,1 -> 2+3+3+4+3 = 15 + 4+4+4+4+4 = 20 => 35*2.5 = 87.5
+leo:    1,2,4,1,3,3,5,1,3,1 -> 0+3+2+4+2 = 11 + 3+4+2+4+4 = 17 => 28*2.5 = 70
+flores: 4,1,5,1,4,1,5,2,4,1 -> 3+4+3+4+3 = 17 + 4+4+4+3+4 = 19 => 38*2.5 = 95
+renan:  3,1,5,1,2,4,5,2,2,1 -> 2+4+1+4+1 = 12 + 4+4+1+3+4 = 16 => 28*2.5 = 70 
+jonas:  1,5,1,4,3,5,1,4,2,1 -> 0+0+2+0+1 = 3  + 0+1+0+1+4 = 6  => 9*2.5  = 22.5
