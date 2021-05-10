@@ -52,7 +52,8 @@
         android:layout_marginLeft="20dp"
         android:scaleType="fitXY"
         android:src="@drawable/record_button"
-        android:backgroundTint="@color/white"/>
+        android:backgroundTint="@color/white"
+        />
 
     <SeekBar
         android:id="@+id/seek_1"
@@ -62,14 +63,15 @@
         android:layout_marginTop="150dp"
         android:layout_marginLeft="80dp"
         android:max="50"
-        android:progress="0" />
+        android:progress="0"
+        />
 
     <ImageButton
         android:id="@+id/play"
         android:layout_width="65dp"
         android:layout_height="65dp"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="600dp"
+        android:layout_marginLeft="60dp"
+        android:layout_marginTop="650dp"
         android:scaleType="fitXY"
         android:backgroundTint="@color/white"
         android:src="@drawable/play_button_disabled"
@@ -80,9 +82,19 @@
         android:layout_height="65dp"
         android:layout_below="@id/seek_1"
         android:layout_marginLeft="320dp"
+        android:layout_marginTop="30dp"
         android:scaleType="fitXY"
         android:backgroundTint="@color/white"
         android:src="@drawable/add_button"
-        android:textSize="20sp" />
+        android:textSize="20sp"
+        />
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Exportar"
+        android:layout_marginTop="658dp"
+        android:layout_marginLeft="250dp"
+        android:backgroundTint="@color/white"
+        android:textColor="@color/black"/>
 
 </RelativeLayout>
